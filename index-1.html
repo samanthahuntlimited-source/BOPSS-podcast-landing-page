@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOPSS-cast — Listen & Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0B0F1A;
+      --surface:   #141926;
+      --border:    #1F2A3C;
+      --accent:    #3E9EFF;
+      --accent2:   #A259FF;
+      --text:      #E8EDF5;
+      --muted:     #7A8499;
+      --spotify:   #1DB954;
+      --youtube:   #FF0000;
+      --apple:     #FA243C;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px 60px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+
+    .eyebrow {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 7vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 14px;
+    }
+
+    .tagline {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 380px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Platform grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 52px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 20px;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      border-radius: inherit;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+    }
+
+    .card.spotify  { --c: var(--spotify); }
+    .card.youtube  { --c: var(--youtube); }
+    .card.apple    { --c: var(--apple);   }
+
+    .card:hover { border-color: var(--c); }
+    .card:hover::before { background: radial-gradient(ellipse at top left, color-mix(in srgb, var(--c) 12%, transparent), transparent 70%); opacity: 1; }
+
+    .platform-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .platform-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card.spotify  .platform-icon { background: rgba(29,185,84,0.15); }
+    .card.youtube  .platform-icon { background: rgba(255,0,0,0.12); }
+    .card.apple    .platform-icon { background: rgba(250,36,60,0.12); }
+
+    .platform-icon svg { width: 18px; height: 18px; }
+
+    .platform-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .card.spotify  .platform-name { color: var(--spotify); }
+    .card.youtube  .platform-name { color: var(--youtube); }
+    .card.apple    .platform-name { color: var(--apple);   }
+
+    .format-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      width: fit-content;
+    }
+
+    .format-tag svg { width: 11px; height: 11px; opacity: 0.7; }
+
+    .card-arrow {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--border);
+      transition: color 0.18s, transform 0.18s;
+    }
+    .card:hover .card-arrow {
+      color: var(--c);
+      transform: translateY(-50%) translateX(2px);
+    }
+
+    /* Apple spans full width */
+    .card.apple-full {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: center;
+      padding: 20px 22px;
+    }
+    .card.apple-full .platform-row { flex: 1; }
+
+    /* QR section */
+    .qr-section {
+      text-align: center;
+    }
+
+    .qr-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .qr-wrap {
+      display: inline-block;
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 0 0 1px var(--border);
+    }
+
+    #qrcode canvas, #qrcode img {
+      display: block;
+      border-radius: 4px;
+    }
+
+    .qr-url {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      max-width: 240px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <p class="eyebrow">The Official Podcast</p>
+    <h1>BOPSS-cast</h1>
+    <p class="tagline">Choose your platform and format below to start listening or watching.</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- Spotify Audio -->
+    <a class="card spotify"
+       href="https://open.spotify.com/show/033yUGo5tJU1yQcblvcf0J"
+       target="_blank" rel="noopener">
+      <div class="platform-row">
+        <div class="platform-icon">
+          <!-- Spotify icon -->
+          <svg viewBox="0 0 24 24" fill="#1DB954" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 11-.277-1.216c3.809-.87 7.076-.496 9.712 1.116a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 11-.453-1.492c3.633-1.103 8.147-.568 11.233 1.329a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.793c3.527-1.07 9.385-.864 13.088 1.329a.937.937 0 01-.928 1.621z"/>
+          </svg>
+        </div>
+        <span class="platform-name">Spotify</span>
+      </div>
+      <div class="format-tag">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 100 18A9 9 0 0012 3zm0 16a7 7 0 110-14 7 7 0 010 14zm0-11a4 4 0 100 8 4 4 0 000-8zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
+        Audio podcast
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <!-- Spotify Video -->
+    <a class="card spotify"
+       href="https://open.spotify.com/show/033yUGo5tJU1yQcblvcf0J"
+       target="_blank" rel="noopener">
+      <div class="platform-row">
+        <div class="platform-icon">
+          <svg viewBox="0 0 24 24" fill="#1DB954" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.623.623 0 01-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.623.623 0 11-.277-1.216c3.809-.87 7.076-.496 9.712 1.116a.623.623 0 01.207.857zm1.223-2.722a.78.78 0 01-1.072.257c-2.687-1.652-6.785-2.13-9.965-1.166a.78.78 0 11-.453-1.492c3.633-1.103 8.147-.568 11.233 1.329a.78.78 0 01.257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 11-.543-1.793c3.527-1.07 9.385-.864 13.088 1.329a.937.937 0 01-.928 1.621z"/>
+          </svg>
+        </div>
+        <span class="platform-name">Spotify</span>
+      </div>
+      <div class="format-tag">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+        Video podcast
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <!-- YouTube Audio -->
+    <a class="card youtube"
+       href="https://www.youtube.com/@bopss-youtube/podcasts"
+       target="_blank" rel="noopener">
+      <div class="platform-row">
+        <div class="platform-icon">
+          <svg viewBox="0 0 24 24" fill="#FF0000" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </div>
+        <span class="platform-name">YouTube</span>
+      </div>
+      <div class="format-tag">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 100 18A9 9 0 0012 3zm0 16a7 7 0 110-14 7 7 0 010 14zm0-11a4 4 0 100 8 4 4 0 000-8zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
+        Audio podcast
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <!-- YouTube Video -->
+    <a class="card youtube"
+       href="https://www.youtube.com/@bopss-youtube"
+       target="_blank" rel="noopener">
+      <div class="platform-row">
+        <div class="platform-icon">
+          <svg viewBox="0 0 24 24" fill="#FF0000" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </div>
+        <span class="platform-name">YouTube</span>
+      </div>
+      <div class="format-tag">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+        Video podcast
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+    <!-- Apple Podcasts — audio only, spans full width -->
+    <a class="card apple apple-full"
+       href="https://podcasts.apple.com/gb/podcast/bopss-cast/id1896929490"
+       target="_blank" rel="noopener">
+      <div class="platform-row">
+        <div class="platform-icon">
+          <svg viewBox="0 0 24 24" fill="#FA243C" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 3.5a4 4 0 014 4c0 1.547-.879 2.887-2.168 3.575a7.05 7.05 0 01.293 1.318c.47-.178.968-.275 1.481-.281L15.75 14H8.25l.144-.888c.513.006 1.01.103 1.481.281a7.05 7.05 0 01.293-1.318A4.003 4.003 0 018 9.5a4 4 0 014-4zm0 1.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm-.75 8.4l-.5 3.1h2.5l-.5-3.1a2.5 2.5 0 01-1.5 0z"/>
+          </svg>
+        </div>
+        <span class="platform-name">Apple Podcasts</span>
+      </div>
+      <div class="format-tag" style="margin-left: auto; margin-right: 28px;">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 100 18A9 9 0 0012 3zm0 16a7 7 0 110-14 7 7 0 010 14zm0-11a4 4 0 100 8 4 4 0 000-8zm0 6a2 2 0 110-4 2 2 0 010 4z"/></svg>
+        Audio only
+      </div>
+      <span class="card-arrow">→</span>
+    </a>
+
+  </div>
+
+  <!-- QR Code -->
+  <div class="qr-section">
+    <p class="qr-label">Scan to open this page</p>
+    <div class="qr-wrap">
+      <div id="qrcode"></div>
+    </div>
+    <p class="qr-url" id="page-url"></p>
+  </div>
+
+  <script>
+    // Generate QR code pointing to this page itself.
+    // When hosted online, the QR will encode your real hosted URL.
+    // Until then it encodes the Spotify show as a useful fallback.
+    const isHosted = window.location.protocol === 'https:' || window.location.hostname !== '';
+    const pageUrl = (window.location.protocol === 'file:')
+      ? 'https://open.spotify.com/show/033yUGo5tJU1yQcblvcf0J'
+      : window.location.href;
+    document.getElementById('page-url').textContent = (window.location.protocol === 'file:')
+      ? 'Host this page online and the QR code will update to point here automatically.'
+      : pageUrl;
+
+    new QRCode(document.getElementById('qrcode'), {
+      text: pageUrl,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  </script>
+</body>
+</html>
